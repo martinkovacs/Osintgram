@@ -1323,7 +1323,7 @@ class Osintgram:
             pc.printout("Sorry! No results found :-(\n", pc.RED)
 
 
-    def get_user_photo(self):
+    def get_user_posts(self):
         if self._check_private_profile():
             return
 
@@ -1331,15 +1331,15 @@ class Osintgram:
         if self.cli_mode:
             user_input = ""
         else:
-            pc.printout("How many photos you want to download (default all): ", pc.YELLOW)
+            pc.printout("How many posts you want to download (default all): ", pc.YELLOW)
             user_input = input()
           
         try:
             if user_input == "":
-                pc.printout("Downloading all photos available...\n")
+                pc.printout("Downloading all posts available...\n")
             else:
                 limit = int(user_input)
-                pc.printout("Downloading " + user_input + " photos...\n")
+                pc.printout("Downloading " + user_input + " posts...\n")
 
         except ValueError:
             pc.printout("Wrong value entered\n", pc.RED)
@@ -1361,26 +1361,37 @@ class Osintgram:
             for item in data:
                 if counter == limit:
                     break
-                if "image_versions2" in item:
+                
+                if "video_versions" in item:
                     counter = counter + 1
-                    url = item["image_versions2"]["candidates"][0]["url"]
-                    photo_id = item["id"]
-                    end = self.output_dir + "/" + self.target + "_" + photo_id + ".jpg"
+                    url = item["video_versions"][0]["url"]
+                    post_id = item["id"]
+                    end = self.output_dir + "/" + self.target + "_" + post_id + ".mp4"
                     urllib.request.urlretrieve(url, end)
                     sys.stdout.write("\rDownloaded %i" % counter)
                     sys.stdout.flush()
-                else:
+                elif "image_versions2" in item:
+                    counter = counter + 1
+                    url = item["image_versions2"]["candidates"][0]["url"]
+                    post_id = item["id"]
+                    end = self.output_dir + "/" + self.target + "_" + post_id + ".jpg"
+                    urllib.request.urlretrieve(url, end)
+                    sys.stdout.write("\rDownloaded %i" % counter)
+                    sys.stdout.flush()
+                elif "carousel_media" in item:
                     carousel = item["carousel_media"]
                     for i in carousel:
                         if counter == limit:
                             break
                         counter = counter + 1
                         url = i["image_versions2"]["candidates"][0]["url"]
-                        photo_id = i["id"]
-                        end = self.output_dir + "/" + self.target + "_" + photo_id + ".jpg"
+                        post_id = i["id"]
+                        end = self.output_dir + "/" + self.target + "_" + post_id + ".jpg"
                         urllib.request.urlretrieve(url, end)
                         sys.stdout.write("\rDownloaded %i" % counter)
                         sys.stdout.flush()
+                else:
+                    pc.printout("Sorry! No post found in " + item + "\n", pc.RED)
 
         except AttributeError:
             pass
@@ -1388,10 +1399,10 @@ class Osintgram:
         except KeyError:
             pass
 
-        sys.stdout.write(" photos")
+        sys.stdout.write(" posts")
         sys.stdout.flush()
 
-        pc.printout("\nWoohoo! We downloaded " + str(counter) + " photos (saved in " + self.output_dir + " folder) \n", pc.GREEN)
+        pc.printout("\nWoohoo! We downloaded " + str(counter) + " posts (saved in " + self.output_dir + " folder) \n", pc.GREEN)
 
 
     def get_user_propic(self):

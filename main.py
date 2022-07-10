@@ -68,8 +68,8 @@ def cmdlist():
     print("Get target's posts type (photo or video)")
     pc.printout("photodes\t")
     print("Get description of target's photos")
-    pc.printout("photos\t\t")
-    print("Download target's photos in output folder")
+    pc.printout("posts\t\t")
+    print("Download target's posts in output folder")
     pc.printout("propic\t\t")
     print("Download target's profile picture")
     pc.printout("stories\t\t")
@@ -149,7 +149,7 @@ commands = {
     'likes':            api.get_total_likes,
     'mediatype':        api.get_media_type,
     'photodes':         api.get_photo_description,
-    'photos':           api.get_user_photo,
+    'posts':            api.get_user_posts,
     'propic':           api.get_user_propic,
     'stories':          api.get_user_stories,
     'tagged':           api.get_people_tagged_by_user,
