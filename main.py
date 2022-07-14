@@ -18,7 +18,7 @@ except:
 
 def printlogo():
     pc.printout(artwork.ascii_art, pc.YELLOW)
-    pc.printout("\nVersion 1.1 - Developed by Giuseppe Criscione\n\n", pc.YELLOW)
+    pc.printout("\nVersion 1.4 - Developed by Giuseppe Criscione\n\n", pc.YELLOW)
     pc.printout("Type 'list' to show all allowed commands\n")
     pc.printout("Type 'FILE=y' to save results to files like '<target username>_<command>.txt (default is disabled)'\n")
     pc.printout("Type 'FILE=n' to disable saving to files'\n")
@@ -48,14 +48,20 @@ def cmdlist():
     print("Get users followed by target")
     pc.printout("fwersemail\t")
     print("Get email of target followers")
-    pc.printout("fwingsemail\t")
-    print("Get email of users followed by target")
     pc.printout("fwersnumber\t")
     print("Get phone number of target followers")
+    pc.printout("fwerssubset\t")
+    print("Get the list of users who follow both target1 and target2")
+    pc.printout("fwingsemail\t")
+    print("Get email of users followed by target")
     pc.printout("fwingsnumber\t")
-    print("Get phone number of users followed by target")    
+    print("Get phone number of users followed by target")
+    pc.printout("fwingssubset\t")
+    print("Get the list of users followed by both target1 and target2")        
     pc.printout("hashtags\t")
     print("Get hashtags used by target")
+    pc.printout("highlights\t")
+    print("Download target's highlights")
     pc.printout("info\t\t")
     print("Get target info")
     pc.printout("likes\t\t")
@@ -64,8 +70,8 @@ def cmdlist():
     print("Get target's posts type (photo or video)")
     pc.printout("photodes\t")
     print("Get description of target's photos")
-    pc.printout("photos\t\t")
-    print("Download target's photos in output folder")
+    pc.printout("posts\t\t")
+    print("Download target's posts in output folder")
     pc.printout("propic\t\t")
     print("Download target's profile picture")
     pc.printout("stories\t\t")
@@ -109,10 +115,10 @@ parser = argparse.ArgumentParser(description='Osintgram is a OSINT tool on Insta
                                              'to perform analysis on Instagram account of any users by its nickname ')
 parser.add_argument('id', type=str,  # var = id
                     help='username')
-parser.add_argument('-C','--cookies', help='clear\'s previous cookies', action="store_true")
-parser.add_argument('-j', '--json', help='save commands output as JSON file', action='store_true')
-parser.add_argument('-f', '--file', help='save output in a file', action='store_true')
 parser.add_argument('-c', '--command', help='run in single command mode & execute provided command', action='store')
+parser.add_argument('-C','--cookies', help='clear\'s previous cookies', action="store_true")
+parser.add_argument('-f', '--file', help='save output in a file', action='store_true')
+parser.add_argument('-j', '--json', help='save commands output as JSON file', action='store_true')
 parser.add_argument('-o', '--output', help='where to store photos', action='store')
 
 args = parser.parse_args()
@@ -135,15 +141,18 @@ commands = {
     'followers':        api.get_followers,
     'followings':       api.get_followings,
     'fwersemail':       api.get_fwersemail,
-    'fwingsemail':      api.get_fwingsemail,
     'fwersnumber':      api.get_fwersnumber,
+    'fwerssubset':      api.get_followers_subset,
+    'fwingsemail':      api.get_fwingsemail,
     'fwingsnumber':     api.get_fwingsnumber,
+    'fwingssubset':     api.get_followings_subset,
     'hashtags':         api.get_hashtags,
+    'highlights':       api.get_user_highlights,
     'info':             api.get_user_info,
     'likes':            api.get_total_likes,
     'mediatype':        api.get_media_type,
     'photodes':         api.get_photo_description,
-    'photos':           api.get_user_photo,
+    'posts':            api.get_user_posts,
     'propic':           api.get_user_propic,
     'stories':          api.get_user_stories,
     'tagged':           api.get_people_tagged_by_user,
