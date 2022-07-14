@@ -5,3 +5,5 @@ prettytable
 instagram-private-api==1.6.0
 gnureadline>=8.0.0; platform_system != "Windows"
 pyreadline==2.1; platform_system == "Windows"
+pycryptodomex==3.15.0
+pynacl==1.4.0

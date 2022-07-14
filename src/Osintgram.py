@@ -13,6 +13,12 @@ ssl._create_default_https_context = ssl._create_unverified_context
 from geopy.geocoders import Nominatim
 from instagram_private_api import Client as AppClient
 from instagram_private_api import ClientCookieExpiredError, ClientLoginRequiredError, ClientError, ClientThrottledError
+from src.webclient import WebClient
+from instagram_web_api import (
+    ClientCookieExpiredError as WebClientCookieExpiredError,
+    ClientLoginError as WebClientLoginError,
+    ClientError as WebClientError
+)
 
 from prettytable import PrettyTable
 
@@ -22,7 +28,7 @@ from src import config
 
 class Osintgram:
     api = None
-    api2 = None
+    web_api = None
     geolocator = Nominatim(user_agent="http")
     user_id = None
     target_id = None
@@ -33,6 +39,7 @@ class Osintgram:
     jsonDump = False
     cli_mode = False
     output_dir = "output"
+    logged_in_web = False
 
 
     def __init__(self, target, is_file, is_json, is_cli, output_dir, clear_cookies):
@@ -45,6 +52,7 @@ class Osintgram:
         if not is_cli:
           print("\nAttempt to login...")
         self._login(u, p)
+        self.logged_in_web = False
         self._setTarget(target, True)
         self.writeFile = is_file
         self.jsonDump = is_json
@@ -120,11 +128,12 @@ class Osintgram:
 
     def clear_cache(self):
         try:
-            f = open("config/settings.json",'w')
-            f.write("{}")
+            with open("config/settings.json", "w"), open("config/settings_web.json", "w") as s, sw:
+                s.write("{}")
+                sw.write("{}")
             pc.printout("Cache Cleared.\n",pc.GREEN)
         except FileNotFoundError:
-            pc.printout("Settings.json don't exist.\n",pc.RED)
+            pc.printout("Settings.json or settings_web.json don't exist.\n",pc.RED)
         finally:
             f.close()
 
@@ -1108,6 +1117,80 @@ class Osintgram:
             pc.printout("Sorry! No results found :-(\n", pc.RED)
 
 
+    def get_user_highlights(self):
+        if self._check_private_profile():
+            return
+
+        if not self.logged_in_web:
+            self._login_web_api(config.getUsername(), config.getPassword())
+
+        pc.printout("Searching for " + self.target + " highlights...\n")
+
+        highlight_tray = self.web_api.highlight_reels(str(self.target_id))
+
+        trays = []
+        for edge in highlight_tray["data"]["user"]["edge_highlight_reels"]["edges"]:
+            trays.append({"id": edge["node"]["id"], "title": edge["node"]["title"], "cover": edge["node"]["cover_media_cropped_thumbnail"]["url"]})
+        
+        pc.printout("Found " + str(len(trays)) + " highlight trays\n")
+
+        if self.cli_mode:
+            user_input = ""
+        else:
+            pc.printout("Order: Newest tray newest highlight --> Oldest tray oldest highlight\n", pc.YELLOW) 
+            pc.printout("How many highlights do you want to get? (default: all) ", pc.YELLOW)
+            user_input = input()
+          
+        try:
+            if user_input == "":
+                value = -1
+                pc.printout("\nDownloading all highlights available...\n")
+            else:
+                value = int(user_input)
+                pc.printout("Downloading " + user_input + " highlights...\n")
+        except ValueError:
+            pc.printout("Error! Please enter a valid integer, or leave empty for all\n", pc.RED)
+            return
+        
+        counter = 0
+        for tray in trays:
+            data = self.web_api.highlight_reel_media(tray["id"])
+            os.makedirs(self.output_dir + "/" + tray["title"], exist_ok=True)
+            
+            url = tray["cover"]
+            end = self.output_dir + "/" + tray["title"] + "/" + self.target + "_" + tray["title"] + "_cover" + ".jpg"
+            urllib.request.urlretrieve(url, end)
+
+            for highlight in data["data"]["reels_media"][0]["items"]:
+                if value == counter:
+                    break
+
+                if highlight["__typename"] == "GraphStoryImage":
+                    url = highlight["display_url"]
+                    end = self.output_dir + "/" + tray["title"] + "/" + self.target + "_" + highlight["id"] + ".jpg"
+                    urllib.request.urlretrieve(url, end)
+                    counter += 1
+                    sys.stdout.write("\rDownloaded %i" % counter)
+                    sys.stdout.flush()
+                elif highlight["__typename"] == "GraphStoryVideo":
+                    url = highlight["display_url"]
+                    end = self.output_dir + "/" + tray["title"] + "/" + self.target + "_" + highlight["id"] + ".mp4"
+                    urllib.request.urlretrieve(url, end)
+                    counter += 1
+                    sys.stdout.write("\rDownloaded %i" % counter)
+                    sys.stdout.flush()
+                else:
+                    pc.printout("Sorry! Unknown type: " + str(highlight["__typename"]) + "\n", pc.RED)
+            
+            if value == counter:
+                break
+
+        if counter > 0:
+            pc.printout("\n" + str(counter) + " target highlights saved in output folder\n", pc.GREEN)
+        else:
+            pc.printout("Sorry! No results found :-(\n", pc.RED)
+
+
     def get_user_info(self):
         try:
             endpoint = 'users/{user_id!s}/full_detail_info/'.format(**{'user_id': self.target_id})
@@ -1679,26 +1762,18 @@ class Osintgram:
         try:
             settings_file = "config/settings.json"
             if not os.path.isfile(settings_file):
-                # settings file does not exist
-                print(f'Unable to find file: {settings_file!s}')
-
-                # login new
+                pc.printout('Unable to find file: {0!s}\n'.format(settings_file))
                 self.api = AppClient(auto_patch=True, authenticate=True, username=u, password=p,
                                      on_login=lambda x: self._onlogin_callback(x, settings_file))
-
             else:
                 with open(settings_file) as file_data:
                     cached_settings = json.load(file_data, object_hook=self._from_json)
-                # print('Reusing settings: {0!s}'.format(settings_file))
-
-                # reuse auth settings
-                self.api = AppClient(
-                    username=u, password=p,
-                    settings=cached_settings,
-                    on_login=lambda x: self._onlogin_callback(x, settings_file))
+                
+                self.api = AppClient(username=u, password=p, settings=cached_settings,
+                                     on_login=lambda x: self._onlogin_callback(x, settings_file))
 
         except (ClientCookieExpiredError, ClientLoginRequiredError) as e:
-            print(f'ClientCookieExpiredError/ClientLoginRequiredError: {e!s}')
+            pc.printout('ClientCookieExpiredError/ClientLoginRequiredError: {0!s}\n'.format(e), pc.RED)
 
             # Login expired
             # Do relogin but use default ua, keys and such
@@ -1713,7 +1788,40 @@ class Osintgram:
             pc.printout(e.msg, pc.RED)
             pc.printout("\n")
             if 'challenge' in error:
-                print("Please follow this link to complete the challenge: " + error['challenge']['url'])
+                pc.printout("Please follow this link to complete the challenge: " + error['challenge']['url'])
+            exit(9)
+
+
+    def _login_web_api(self, u, p):
+        try:
+            settings_file = "config/settings_web.json"
+            if not os.path.isfile(settings_file):
+                pc.printout('Unable to find file: {0!s}\n'.format(settings_file))
+                self.web_api = WebClient(auto_patch=True, authenticate=True, username=u, password=p,
+                                         on_login=lambda x: self._onlogin_callback(x, settings_file))
+            else:
+                with open(settings_file) as file_data:
+                    cached_settings = json.load(file_data, object_hook=self._from_json)
+                
+                self.web_api = WebClient(username=u, password=p, settings=cached_settings,
+                                         on_login=lambda x: self._onlogin_callback(x, settings_file))
+            
+            self.logged_in_web = True
+
+        except (WebClientCookieExpiredError, WebClientLoginError) as e:
+            pc.printout('WebClientCookieExpiredError/WebClientLoginError: {0!s}\n'.format(e), pc.RED)
+
+            # Login expired
+            # Do relogin but use default ua, keys and such
+            self.web_api = WebClient(auto_patch=True, authenticate=True, username=u, password=p,
+                                     on_login=lambda x: self._onlogin_callback(x, settings_file))
+
+            self.logged_in_web = True
+
+        except WebClientError as e:
+            pc.printout('WebClientError {0!s} (Code: {1:d})\n'.format(e.msg, e.code), pc.RED)
+            pc.printout(e.msg, pc.RED)
+            pc.printout("\n")
             exit(9)
 
 
@@ -1804,45 +1912,6 @@ class Osintgram:
             sys.exit(2)
 
 
-    def set_write_file(self, flag):
-        if flag:
-            pc.printout("Write to file: ")
-            pc.printout("enabled", pc.GREEN)
-            pc.printout("\n")
-        else:
-            pc.printout("Write to file: ")
-            pc.printout("disabled", pc.RED)
-            pc.printout("\n")
-
-        self.writeFile = flag
-
-
-    def set_json_dump(self, flag):
-        if flag:
-            pc.printout("Export to JSON: ")
-            pc.printout("enabled", pc.GREEN)
-            pc.printout("\n")
-        else:
-            pc.printout("Export to JSON: ")
-            pc.printout("disabled", pc.RED)
-            pc.printout("\n")
-
-        self.jsonDump = flag
-
-
-    def _from_json(self, json_object):
-        if '__class__' in json_object and json_object['__class__'] == 'bytes':
-            return codecs.decode(json_object['__value__'].encode(), 'base64')
-        return json_object
-
-
-    def _to_json(self, python_object):
-        if isinstance(python_object, bytes):
-            return {'__class__': 'bytes',
-                    '__value__': codecs.encode(python_object, 'base64').decode()}
-        raise TypeError(repr(python_object) + ' is not JSON serializable')
-
-
     def _print_target_banner(self):
         pc.printout("\nLogged as ", pc.GREEN)
         pc.printout(self.api.username, pc.CYAN)
@@ -1867,3 +1936,43 @@ class Osintgram:
         self.following = self._check_following()
         if(show_output):
             self._print_target_banner()
+
+
+    # File and JSON functions
+    def _from_json(self, json_object):
+        if '__class__' in json_object and json_object['__class__'] == 'bytes':
+            return codecs.decode(json_object['__value__'].encode(), 'base64')
+        return json_object
+
+
+    def _to_json(self, python_object):
+        if isinstance(python_object, bytes):
+            return {'__class__': 'bytes',
+                    '__value__': codecs.encode(python_object, 'base64').decode()}
+        raise TypeError(repr(python_object) + ' is not JSON serializable')
+
+
+    def set_write_file(self, flag):
+        if flag:
+            pc.printout("Write to file: ")
+            pc.printout("enabled", pc.GREEN)
+            pc.printout("\n")
+        else:
+            pc.printout("Write to file: ")
+            pc.printout("disabled", pc.RED)
+            pc.printout("\n")
+
+        self.writeFile = flag
+
+
+    def set_json_dump(self, flag):
+        if flag:
+            pc.printout("Export to JSON: ")
+            pc.printout("enabled", pc.GREEN)
+            pc.printout("\n")
+        else:
+            pc.printout("Export to JSON: ")
+            pc.printout("disabled", pc.RED)
+            pc.printout("\n")
+
+        self.jsonDump = flag

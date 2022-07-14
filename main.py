@@ -18,7 +18,7 @@ except:
 
 def printlogo():
     pc.printout(artwork.ascii_art, pc.YELLOW)
-    pc.printout("\nVersion 1.1 - Developed by Giuseppe Criscione\n\n", pc.YELLOW)
+    pc.printout("\nVersion 1.4 - Developed by Giuseppe Criscione\n\n", pc.YELLOW)
     pc.printout("Type 'list' to show all allowed commands\n")
     pc.printout("Type 'FILE=y' to save results to files like '<target username>_<command>.txt (default is disabled)'\n")
     pc.printout("Type 'FILE=n' to disable saving to files'\n")
@@ -50,16 +50,18 @@ def cmdlist():
     print("Get email of target followers")
     pc.printout("fwersnumber\t")
     print("Get phone number of target followers")
-    pc.printout("fwersubset\t")
+    pc.printout("fwerssubset\t")
     print("Get the list of users who follow both target1 and target2")
     pc.printout("fwingsemail\t")
     print("Get email of users followed by target")
     pc.printout("fwingsnumber\t")
     print("Get phone number of users followed by target")
-    pc.printout("fwingsubset\t")
+    pc.printout("fwingssubset\t")
     print("Get the list of users followed by both target1 and target2")        
     pc.printout("hashtags\t")
     print("Get hashtags used by target")
+    pc.printout("highlights\t")
+    print("Download target's highlights")
     pc.printout("info\t\t")
     print("Get target info")
     pc.printout("likes\t\t")
@@ -140,11 +142,12 @@ commands = {
     'followings':       api.get_followings,
     'fwersemail':       api.get_fwersemail,
     'fwersnumber':      api.get_fwersnumber,
-    'fwersubset':       api.get_followers_subset,
+    'fwerssubset':      api.get_followers_subset,
     'fwingsemail':      api.get_fwingsemail,
     'fwingsnumber':     api.get_fwingsnumber,
-    'fwingsubset':      api.get_followings_subset,
+    'fwingssubset':     api.get_followings_subset,
     'hashtags':         api.get_hashtags,
+    'highlights':       api.get_user_highlights,
     'info':             api.get_user_info,
     'likes':            api.get_total_likes,
     'mediatype':        api.get_media_type,
@@ -191,13 +194,13 @@ while True:
     if _cmd:
         _cmd()
     elif cmd == "FILE=y":
-        api._set_write_file(True)
+        api.set_write_file(True)
     elif cmd == "FILE=n":
-        api._set_write_file(False)
+        api.set_write_file(False)
     elif cmd == "JSON=y":
-        api._set_json_dump(True)
+        api.set_json_dump(True)
     elif cmd == "JSON=n":
-        api._set_json_dump(False)
+        api.set_json_dump(False)
     elif cmd == "":
         print("")
     else:
