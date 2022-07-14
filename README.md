@@ -1,9 +1,8 @@
 # Osintgram 🔎📸
 
-[![version-1.3](https://img.shields.io/badge/version-1.3-green)](https://github.com/Datalux/Osintgram/releases/tag/1.3)
-[![GPLv3](https://img.shields.io/badge/license-GPLv3-blue)](https://img.shields.io/badge/license-GPLv3-blue)
-[![Python3](https://img.shields.io/badge/language-Python3-red)](https://img.shields.io/badge/language-Python3-red)
-[![Telegram](https://img.shields.io/badge/Telegram-Channel-blue.svg)](https://t.me/osintgram)
+[![GPLv3](https://img.shields.io/github/license/martinkovacs/Osintgram?color=brightgreen)](https://img.shields.io/badge/license-GPLv3-blue)
+[![version](https://img.shields.io/github/v/tag/martinkovacs/Osintgram?color=orange)](https://github.com/martinkovacs/Osintgram/tags)
+[![Python3](https://img.shields.io/badge/python-%3E%3D3.5-blue)](https://img.shields.io/badge/python-%3E%3D3.5-blue)
 [![Docker](https://img.shields.io/badge/Docker-Supported-blue)](https://img.shields.io/badge/Docker-Supported-blue)
 
 Osintgram is a **OSINT** tool on Instagram to collect, analyze, and run reconnaissance.
@@ -22,39 +21,51 @@ Osintgram offers an interactive shell to perform analysis on Instagram account o
 
 ```text
 - addrs           Get all registered addressed by target photos
+- cache           Clear cache of the tool
 - captions        Get user's photos captions
-- comments        Get total comments of target's posts
 - commentdata     Get a list of all the comments on the target's posts
+- comments        Get total comments of target's posts
 - followers       Get target followers
 - followings      Get users followed by target
 - fwersemail      Get email of target followers
-- fwingsemail     Get email of users followed by target
 - fwersnumber     Get phone number of target followers
+- fwerssubset     Get the list of users who follow both target1 and target2
+- fwingsemail     Get email of users followed by target
 - fwingsnumber    Get phone number of users followed by target
+- fwingssubset    Get the list of users followed by both target1 and target2
 - hashtags        Get hashtags used by target
+- highlights      Download target's highlights
 - info            Get target info
 - likes           Get total likes of target's posts
 - mediatype       Get user's posts type (photo or video)
 - photodes        Get description of target's photos
-- photos          Download user's photos in output folder
+- posts           Download user's posts in output folder
 - propic          Download user's profile picture
 - stories         Download user's stories  
 - tagged          Get list of users tagged by target
+- target          Set new target
 - wcommented      Get a list of user who commented target's photos
 - wtagged         Get a list of user who tagged target
 ```
 
 You can find detailed commands usage [here](doc/COMMANDS.md).
 
-[**Latest version**](https://github.com/Datalux/Osintgram/releases/tag/1.3) |
+[**Latest version**](https://github.com/martinkovacs/Osintgram/releases/tag/1.4) |
 [Commands](doc/COMMANDS.md) |
 [CHANGELOG](doc/CHANGELOG.md)
 
+## FAQ
+1. **Can I access the contents of a private profile?** No, you cannot get information on private profiles. You can only get information from a public profile or a profile you follow. The tools that claim to be successful are scams!
+2. **What is and how I can bypass the `challenge_required` error?** The `challenge_required` error means that Instagram notice a suspicious behavior on your profile, so needs to check if you are a real person or a bot. To avoid this you should follow the suggested link and complete the required operation (insert a code, confirm email, etc)
+
+
 ## Installation ⚙️
+
+Requires `python >= 3.5`
 
 1. Fork/Clone/Download this repo
 
-    `git clone https://github.com/Datalux/Osintgram.git`
+    `git clone https://github.com/martinkovacs/Osintgram.git`
 
 2. Navigate to the directory
 
@@ -167,7 +178,7 @@ To update Osintgram with the stable release just pull the latest commit using Gi
 
 You can propose a feature request opening an issue or a pull request.
 
-Here is a list of Osintgram's contributors:
+Here is a list of Osintgram's contributors (original repo):
 
 <a href="https://github.com/Datalux/Osintgram/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=Datalux/Osintgram" />

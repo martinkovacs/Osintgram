@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4](https://github.com/martinkovacs/Osintgram/releases/tag/1.4)
+**Enhancements**
+- Added highlights command with working webclient login (b5536d7)
+- Changed photos to posts. Now also downloads videos (bd335ed)
+- Reordered and renamed functions (d1a7180)
+
+
 ## [1.3](https://github.com/Datalux/Osintgram/releases/tag/1.3)
 **Enhancements**
 - Artwork refactoring (#149) 
@@ -148,6 +155,4 @@
 
 ## 0.1
 
-**Initial release** 
-
-
+**Initial release**
