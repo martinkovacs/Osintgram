@@ -128,14 +128,12 @@ class Osintgram:
 
     def clear_cache(self):
         try:
-            with open("config/settings.json", "w"), open("config/settings_web.json", "w") as s, sw:
+            with open("config/settings.json", "w") as s, open("config/settings_web.json", "w") as sw:
                 s.write("{}")
                 sw.write("{}")
             pc.printout("Cache Cleared.\n",pc.GREEN)
         except FileNotFoundError:
             pc.printout("Settings.json or settings_web.json don't exist.\n",pc.RED)
-        finally:
-            f.close()
 
 
     def get_captions(self):
